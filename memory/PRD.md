@@ -20,6 +20,7 @@ Die bestehende Landingpage soll vollständig modernisiert und erweitert werden: 
 - Hero-Kicker/Abstands-System überarbeitet, Timeline auf 01–05 geändert, Ablauf visuell aufgewertet und Mobile-Readability stark optimiert.
 - Mobile Conversion-Boost ergänzt: sticky Bottom-CTA mit 2 Buttons (API-Zugang anfragen / Pakete ansehen), beim Runterscrollen ausblendend und beim Hochscrollen wieder sichtbar.
 - Mobile Sticky-CTA zusätzlich als A/B-Test (50/50, localStorage-persistiert) vorbereitet: Variante B nutzt conversion-stärkere Texte („Kostenlose Erstprüfung starten“ / „Passendes Paket finden“).
+- Anfrageformular auf Netlify Forms migriert (Form `inquiry`, `data-netlify`, hidden `form-name`, statisches Hidden-Formular in `public/index.html`, Submit via `fetch` als `application/x-www-form-urlencoded`, kein Backend-API-Submit).
 
 ## Priorisierter Backlog
 ### P0

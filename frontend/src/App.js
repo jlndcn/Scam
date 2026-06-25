@@ -278,7 +278,7 @@ function App() {
     const businessNumbers = parseBusinessNumbers(formData.phone_numbers_text);
     setIsSubmitting(true);
     try {
-      await fetch("/", {
+      const response = await fetch("/", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -291,6 +291,14 @@ function App() {
           package_type: formData.package_type,
         }),
       });
+
+      const isNetlifyRuntime =
+        window.location.hostname.includes("netlify") ||
+        window.location.hostname.endsWith(".netlify.app");
+
+      if (isNetlifyRuntime && !response.ok) {
+        throw new Error("Netlify-Formular konnte nicht gesendet werden.");
+      }
 
       setSubmittedCount(businessNumbers.length);
       setSubmitFeedback(
