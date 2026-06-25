@@ -1,39 +1,36 @@
-# PRD – WhatsApp Business Stabilitätslösung Landingpage
+# PRD – WhatsApp Business/API Landingpage (Redesign + SMTP Inquiry Flow)
 
 ## Original Problem Statement
-Erstellung einer professionellen, modernen Landingpage für das fiktive Produkt „WhatsApp Business Stabilitätslösung" mit klarer Positionierung (nur WhatsApp Business), Garantie- und Bedingungenstexten, Paketdarstellung, Anfrageformular ohne Login, Ablaufsektion, FAQ und rechtlichem Footer.
+Die bestehende Landingpage soll vollständig modernisiert und erweitert werden: Dark-Premium SaaS-Optik mit WhatsApp-Grün als Akzent, Glassmorphism, dezente Glow-Effekte, Scroll-Reveal, Hero mit Parallax-Gefühl, klare Conversion-Struktur, vollständige Inhaltssektionen und professioneller Formflow ohne unseriöse Claims.
 
 ## Architektur-Entscheidungen
-- **Frontend:** React Single-Page Landingpage mit modularen UI-Abschnitten, Shadcn-Komponenten (Button, Input, Select, Checkbox, Accordion, Textarea), Sonner-Toasts, Framer-Motion für Entrance-Animationen.
-- **Backend:** FastAPI Endpoint `/api/inquiries` zur Speicherung von Anfragen in MongoDB; Validierung via Pydantic inkl. paketabhängiger Rufnummernlimits.
-- **Datenmodell:** Anfrage enthält E-Mail, `business_numbers[]`, Pakettyp, optional Name/Firma, akzeptierte Bedingungen, Status und Zeitstempel.
-- **Design:** Vollständig deutschsprachig, Dark-Premium Stil, ohne Anzugfoto, mit technischer Hero-Visualisierung und QR-Platzhalter.
+- **Frontend (React):** Einseitige Landingpage mit Motion-Reveal + Parallax-Hero, Glassmorphism-Komponenten, responsivem Layout und CTA-fokussierter Struktur.
+- **Backend (FastAPI + MongoDB):** `/api/inquiries` validiert und speichert alle Formularangaben als strukturierte Anfrage.
+- **E-Mail-Versand:** SMTP-Versand vollständig implementiert, ausschließlich ENV-basiert (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `INQUIRY_RECEIVER_EMAIL`).
+- **Fail-Safe-Logik:** Bei SMTP-Fehler oder fehlender SMTP-Config wird Anfrage trotzdem gespeichert, Fehler intern geloggt und nutzerfreundliche Fallback-Meldung angezeigt.
 
-## Was implementiert wurde
-- Vollständige Landingpage mit allen geforderten Bereichen (Hero, Hinweis, Problem, Lösung, Garantie, Pakete, Formular, Ablauf, FAQ, Footer).
-- Formularfluss mit Live-Validierung und Backend-Speicherung inkl. Erfolgsmeldung.
-- Neue Mehrfach-Rufnummernlogik: **Monatlich max. 5**, **Lifetime max. 3** (Frontend + Backend abgesichert).
-- Titel geändert auf: **„API-Einstellung und Anleitung anfordern“**.
-- Dark-Premium Redesign umgesetzt und Bild mit Anzug entfernt.
-- QR-Code-Bereich vollständig entfernt (Hero, Texte/Bezüge, Ablaufbezeichnung angepasst).
-- Dark-Premium Optik weiter optimiert: stärkere Trust-Elemente im Hero, klarere CTA-Führung, verfeinerte Abstände/States.
-- Grundoptik auf **WhatsApp-artigen Dark-Style** umgestellt (kräftiges Grün, Business-Dark-Kontrast) und Layout bewusst kompakter/professioneller ausgerichtet.
-- API- und Regressionstests aktualisiert; aktuelle Tests bestanden.
+## Implementiert
+- Komplette Premium-Dark-SaaS-Landingpage mit WhatsApp-Grün als Akzent und modernen Glass-Cards.
+- Sticky Navigation mit Scroll-Links (Vorteile, Pakete, Ablauf, FAQ, Kontakt) + klaren CTA-Pfaden.
+- Hero mit hochwertigem Dashboard-/Chat-/KPI-/API-Key-Mockup inkl. Parallax-Gefühl.
+- Hinweis-Banner, 3 Content-Cards, Leistungs-Premium-Card, Pricing (150€ Monat / 600€ Lifetime, Lifetime hervorgehoben), Timeline, Support/Sicherheit, FAQ, Footer.
+- Neues Formular mit allen Pflichtfeldern + 4 Pflicht-Checkboxen + professionellem Hinweistext.
+- Backend speichert Anfrage + versucht E-Mail-Zustellung an `INQUIRY_RECEIVER_EMAIL`; Antwort enthält `email_delivery_status` für UX-Meldung.
 
 ## Priorisierter Backlog
 ### P0
-- Rechtstexte als echte Seiten/Inhalte hinter Impressum, Datenschutz, AGB, Garantiebedingungen, Kontakt verlinken.
-- E-Mail-Workflow für Zahlungsaufforderung und Anleitung automatisieren.
+- Reale Impressum/Datenschutz/AGB/Kontakt-Zielseiten ergänzen.
+- SMTP-Zugangsdaten im `.env` setzen und Live-Mailversand produktiv schalten.
 
 ### P1
-- Admin-Übersicht für eingegangene Anfragen (Filter nach Paket, Datum, Rufnummernanzahl).
-- Soft-CRM Export (CSV) für Follow-up und Rechnungsprozesse.
+- Optionales internes Admin-Panel für Anfrage-Status (neu, kontaktiert, abgeschlossen).
+- Serverseitige Rate-Limits/Captcha als zusätzlicher Formularschutz.
 
 ### P2
-- A/B-Tests für Hero-Text und CTA-Texte.
-- Trust-Elemente erweitern (z. B. Fallbeispiele, Qualitätskennzahlen).
+- Erweiterte Vertrauenssektion (Use Cases, Kundenstimmen, Sicherheits-Hinweise).
+- Conversion-A/B-Tests für Hero-Subheadline und Pricing-CTA-Texte.
 
 ## Nächste konkrete Tasks
-1. Echte rechtliche Zielseiten ergänzen und Footer-Buttons darauf routen.
-2. Transaktionale E-Mail-Anbindung für Zahlungsaufforderung integrieren.
-3. Optionales Captcha/Spam-Schutz für das Formular ergänzen.
+1. SMTP-ENV befüllen und Testmail durchlaufen.
+2. Footer-Platzhalter durch echte Rechtsseiten ersetzen.
+3. Optionales Anfrage-Tracking im Backend ergänzen (Statuswechsel + Notizen).
