@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "@/App.css";
 import axios from "axios";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
@@ -137,9 +137,47 @@ function App() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submitFeedback, setSubmitFeedback] = useState("");
   const [submittedCount, setSubmittedCount] = useState(0);
+  const [showMobileCta, setShowMobileCta] = useState(true);
   const shouldReduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll();
   const heroParallax = useTransform(scrollYProgress, [0, 0.35], [0, shouldReduceMotion ? 0 : -25]);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+
+    const handleMobileCtaVisibility = () => {
+      const currentY = window.scrollY;
+      const isMobile = window.innerWidth <= 768;
+
+      if (!isMobile) {
+        setShowMobileCta(false);
+        return;
+      }
+
+      if (currentY < 120) {
+        setShowMobileCta(true);
+        lastY = currentY;
+        return;
+      }
+
+      if (currentY > lastY + 6) {
+        setShowMobileCta(false);
+      } else if (currentY < lastY - 6) {
+        setShowMobileCta(true);
+      }
+
+      lastY = currentY;
+    };
+
+    handleMobileCtaVisibility();
+    window.addEventListener("scroll", handleMobileCtaVisibility, { passive: true });
+    window.addEventListener("resize", handleMobileCtaVisibility);
+
+    return () => {
+      window.removeEventListener("scroll", handleMobileCtaVisibility);
+      window.removeEventListener("resize", handleMobileCtaVisibility);
+    };
+  }, []);
 
   const maxNumbers = useMemo(() => {
     if (formData.package_type === "lifetime") return 3;
@@ -587,6 +625,28 @@ function App() {
           </div>
         </motion.section>
       </main>
+
+      <div
+        className={`mobile-sticky-cta ${showMobileCta ? "visible" : "hidden"}`}
+        data-testid="mobile-sticky-cta-bar"
+      >
+        <button
+          type="button"
+          className="mobile-sticky-cta-btn primary"
+          data-testid="mobile-sticky-primary-cta"
+          onClick={() => jumpToForm()}
+        >
+          API-Zugang anfragen
+        </button>
+        <button
+          type="button"
+          className="mobile-sticky-cta-btn secondary"
+          data-testid="mobile-sticky-secondary-cta"
+          onClick={() => scrollToSection("pakete")}
+        >
+          Pakete ansehen
+        </button>
+      </div>
 
       <footer className="footer" data-testid="legal-footer">
         <div className="container-main footer-wrap">

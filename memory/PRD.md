@@ -18,6 +18,7 @@ Die bestehende Landingpage soll vollständig modernisiert und erweitert werden: 
 - Backend speichert Anfrage + versucht E-Mail-Zustellung an `INQUIRY_RECEIVER_EMAIL`; Antwort enthält `email_delivery_status` für UX-Meldung.
 - Formular auf 4 Kernfelder reduziert (E-Mail, WhatsApp Business Account Name, Rufnummer(n), Paket) und API-Contract entsprechend vereinfacht.
 - Hero-Kicker/Abstands-System überarbeitet, Timeline auf 01–05 geändert, Ablauf visuell aufgewertet und Mobile-Readability stark optimiert.
+- Mobile Conversion-Boost ergänzt: sticky Bottom-CTA mit 2 Buttons (API-Zugang anfragen / Pakete ansehen), beim Runterscrollen ausblendend und beim Hochscrollen wieder sichtbar.
 
 ## Priorisierter Backlog
 ### P0
