@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, model_validator
 from pydantic import EmailStr
 from typing import List, Literal, Optional
 import uuid
@@ -41,11 +41,30 @@ class StatusCheckCreate(BaseModel):
 
 class InquiryRequestCreate(BaseModel):
     email: EmailStr
-    business_phone: str = Field(min_length=6, max_length=30)
+    business_numbers: List[str] = Field(min_length=1)
     package_type: Literal["monthly", "lifetime"]
-    additional_numbers: Optional[str] = None
     name_company: Optional[str] = None
     accept_guarantee_terms: bool
+
+    @model_validator(mode="after")
+    def validate_business_numbers(self):
+        cleaned_numbers = [number.strip() for number in self.business_numbers if number and number.strip()]
+
+        if not cleaned_numbers:
+            raise ValueError("Mindestens eine betroffene Rufnummer ist erforderlich.")
+
+        max_allowed = 5 if self.package_type == "monthly" else 3
+        if len(cleaned_numbers) > max_allowed:
+            raise ValueError(
+                f"Für das gewählte Paket sind maximal {max_allowed} Rufnummern erlaubt."
+            )
+
+        for number in cleaned_numbers:
+            if len(number) < 6 or len(number) > 30:
+                raise ValueError("Jede Rufnummer muss zwischen 6 und 30 Zeichen lang sein.")
+
+        self.business_numbers = cleaned_numbers
+        return self
 
 
 class InquiryRequest(BaseModel):
@@ -53,9 +72,8 @@ class InquiryRequest(BaseModel):
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     email: EmailStr
-    business_phone: str
+    business_numbers: List[str]
     package_type: Literal["monthly", "lifetime"]
-    additional_numbers: Optional[str] = None
     name_company: Optional[str] = None
     accept_guarantee_terms: bool
     status: Literal["payment_request_pending"] = "payment_request_pending"
@@ -114,8 +132,25 @@ async def list_inquiry_requests():
 
     normalized_items = []
     for inquiry in inquiries:
+        if "business_numbers" not in inquiry:
+            fallback_numbers = []
+            primary = inquiry.get("business_phone")
+            additional = inquiry.get("additional_numbers")
+
+            if isinstance(primary, str) and primary.strip():
+                fallback_numbers.append(primary.strip())
+
+            if isinstance(additional, str) and additional.strip():
+                split_additional = [num.strip() for num in additional.split(",") if num.strip()]
+                fallback_numbers.extend(split_additional)
+
+            inquiry["business_numbers"] = fallback_numbers
+
         if isinstance(inquiry.get("created_at"), str):
             inquiry["created_at"] = datetime.fromisoformat(inquiry["created_at"])
+
+        inquiry.pop("business_phone", None)
+        inquiry.pop("additional_numbers", None)
         normalized_items.append(InquiryRequest(**inquiry))
 
     normalized_items.sort(key=lambda item: item.created_at, reverse=True)

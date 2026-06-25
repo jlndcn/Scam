@@ -2,10 +2,18 @@ import { useMemo, useState } from "react";
 import "@/App.css";
 import axios from "axios";
 import { motion } from "framer-motion";
-import { QrCode, ShieldCheck, AlertTriangle, CircleCheck } from "lucide-react";
+import {
+  QrCode,
+  ShieldCheck,
+  AlertTriangle,
+  CircleCheck,
+  ServerCog,
+  MessageSquareWarning,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -46,7 +54,7 @@ const packageOptions = [
 
 const processSteps = [
   "QR-Code scannen oder Button klicken",
-  "E-Mail-Adresse und betroffene Rufnummer eintragen",
+  "E-Mail-Adresse und betroffene Rufnummern eintragen",
   "Paket auswählen",
   "Zahlungsaufforderung per E-Mail erhalten",
   "Nach Zahlungseingang Anleitung per E-Mail bekommen",
@@ -88,9 +96,8 @@ const faqItems = [
 
 const initialForm = {
   email: "",
-  business_phone: "",
+  business_numbers_text: "",
   package_type: "",
-  additional_numbers: "",
   name_company: "",
   accept_guarantee_terms: false,
 };
@@ -107,6 +114,12 @@ function App() {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submittedCount, setSubmittedCount] = useState(0);
+
+  const maxNumbers = useMemo(() => {
+    if (formData.package_type === "lifetime") return 3;
+    return 5;
+  }, [formData.package_type]);
 
   const selectedPackageText = useMemo(() => {
     if (formData.package_type === "monthly") return "Monatliches Paket";
@@ -119,6 +132,12 @@ function App() {
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
+  const parseBusinessNumbers = (rawValue) =>
+    rawValue
+      .split(/[\n,;]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+
   const jumpToForm = (pkgId) => {
     if (pkgId) {
       updateField("package_type", pkgId);
@@ -128,14 +147,24 @@ function App() {
 
   const validateForm = () => {
     const nextErrors = {};
+    const numbers = parseBusinessNumbers(formData.business_numbers_text);
+
     if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       nextErrors.email = "Bitte geben Sie eine gültige E-Mail-Adresse ein.";
     }
-    if (!formData.business_phone || formData.business_phone.length < 6) {
-      nextErrors.business_phone = "Bitte geben Sie eine gültige WhatsApp-Business-Rufnummer ein.";
-    }
     if (!formData.package_type) {
       nextErrors.package_type = "Bitte wählen Sie ein Paket aus.";
+    }
+    if (numbers.length === 0) {
+      nextErrors.business_numbers_text = "Bitte mindestens eine betroffene Rufnummer eingeben.";
+    } else {
+      if (numbers.length > maxNumbers) {
+        nextErrors.business_numbers_text = `Für dieses Paket sind maximal ${maxNumbers} Rufnummern erlaubt.`;
+      }
+      const invalidNumber = numbers.find((number) => number.length < 6 || number.length > 30);
+      if (invalidNumber) {
+        nextErrors.business_numbers_text = "Jede Rufnummer muss zwischen 6 und 30 Zeichen lang sein.";
+      }
     }
     if (!formData.accept_guarantee_terms) {
       nextErrors.accept_guarantee_terms = "Bitte bestätigen Sie die Garantiebedingungen.";
@@ -150,11 +179,20 @@ function App() {
       toast.error("Bitte prüfen Sie Ihre Angaben im Formular.");
       return;
     }
+
+    const businessNumbers = parseBusinessNumbers(formData.business_numbers_text);
     setIsSubmitting(true);
     try {
-      await axios.post(`${API}/inquiries`, formData);
+      await axios.post(`${API}/inquiries`, {
+        email: formData.email,
+        business_numbers: businessNumbers,
+        package_type: formData.package_type,
+        name_company: formData.name_company,
+        accept_guarantee_terms: formData.accept_guarantee_terms,
+      });
+      setSubmittedCount(businessNumbers.length);
       setIsSubmitted(true);
-      toast.success("Zahlungsaufforderung wurde erfolgreich angefordert.");
+      toast.success("Anfrage für API-Einstellung und Anleitung erfolgreich gesendet.");
     } catch (error) {
       const message = error?.response?.data?.detail || "Fehler beim Senden. Bitte erneut versuchen.";
       toast.error(message);
@@ -212,12 +250,13 @@ function App() {
             </div>
 
             <div className="hero-visuals">
-              <img
-                data-testid="hero-image"
-                src="https://images.pexels.com/photos/374618/pexels-photo-374618.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
-                alt="Professioneller Nutzer von WhatsApp Business"
-                className="hero-image"
-              />
+              <div className="tech-card" data-testid="hero-tech-card">
+                <ServerCog size={34} />
+                <h3 data-testid="hero-tech-card-title">API-Stabilitäts-Setup</h3>
+                <p data-testid="hero-tech-card-text">
+                  Für Teams mit hohem Nachrichtenvolumen und klaren Versandprozessen.
+                </p>
+              </div>
               <div className="qr-card" data-testid="qr-placeholder-card">
                 <QrCode size={72} />
                 <p data-testid="qr-placeholder-text">QR-Code Platzhalter</p>
@@ -239,12 +278,14 @@ function App() {
         <motion.section className="section" {...sectionMotion}>
           <div className="container-main split-grid">
             <article className="info-card" data-testid="problem-section">
+              <div className="icon-title-row"><MessageSquareWarning size={20} /><span>Problem</span></div>
               <h2 className="section-heading">Das Risiko bei hohem Nachrichtenaufkommen</h2>
               <p className="body-text">
                 Unternehmen riskieren bei hohen Versandmengen Einschränkungen, automatische Spam-Einstufungen oder Sperrungen — selbst wenn die Nutzung geschäftlich legitim ist.
               </p>
             </article>
             <article className="info-card" data-testid="solution-section">
+              <div className="icon-title-row"><ServerCog size={20} /><span>Lösung</span></div>
               <h2 className="section-heading">Die technische Umsetzung</h2>
               <p className="body-text">
                 Die Lösung arbeitet mit strukturierter Nachrichtenlogik, kontrollierten Abläufen und einem definierten Versandrahmen, um Stabilität im Business-Einsatz zu sichern.
@@ -254,13 +295,7 @@ function App() {
         </motion.section>
 
         <motion.section className="section guarantee-wrap" {...sectionMotion}>
-          <div className="container-main guarantee-grid" data-testid="guarantee-section">
-            <img
-              data-testid="guarantee-image"
-              src="https://images.pexels.com/photos/8867405/pexels-photo-8867405.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
-              alt="Service-Team für stabile Business-Kommunikation"
-              className="guarantee-image"
-            />
+          <div className="container-main" data-testid="guarantee-section">
             <div className="guarantee-card">
               <div className="badge-row" data-testid="guarantee-badge">
                 <ShieldCheck size={16} /> Stabilitäts-Garantie
@@ -315,7 +350,7 @@ function App() {
 
         <motion.section className="section" id="anfrageformular" {...sectionMotion}>
           <div className="container-main form-wrap" data-testid="inquiry-form-section">
-            <h2 className="section-heading">Zahlungsaufforderung anfordern</h2>
+            <h2 className="section-heading">API-Einstellung und Anleitung anfordern</h2>
             {!isSubmitted ? (
               <form className="form-grid" onSubmit={submitForm} data-testid="inquiry-form">
                 <div>
@@ -333,18 +368,20 @@ function App() {
                 </div>
 
                 <div>
-                  <label className="label" htmlFor="businessPhone">Betroffene WhatsApp-Business-Rufnummer</label>
-                  <Input
-                    id="businessPhone"
-                    data-testid="inquiry-business-phone-input"
-                    type="text"
-                    value={formData.business_phone}
-                    onChange={(e) => updateField("business_phone", e.target.value)}
-                    placeholder="z. B. +49 170 0000000"
-                    className="input-soft"
+                  <label className="label" htmlFor="businessNumbers">Betroffene WhatsApp-Business-Rufnummern</label>
+                  <Textarea
+                    id="businessNumbers"
+                    data-testid="inquiry-business-numbers-input"
+                    value={formData.business_numbers_text}
+                    onChange={(e) => updateField("business_numbers_text", e.target.value)}
+                    placeholder="Eine Nummer pro Zeile oder kommagetrennt, z. B. +49..., +49..."
+                    className="input-soft textarea-soft"
                   />
-                  {errors.business_phone && (
-                    <p className="error-text" data-testid="error-business-phone">{errors.business_phone}</p>
+                  <p className="helper-text" data-testid="business-numbers-helper-text">
+                    Aktuelles Limit: maximal {maxNumbers} Rufnummern für das gewählte Paket.
+                  </p>
+                  {errors.business_numbers_text && (
+                    <p className="error-text" data-testid="error-business-numbers">{errors.business_numbers_text}</p>
                   )}
                 </div>
 
@@ -369,19 +406,6 @@ function App() {
                   {errors.package_type && (
                     <p className="error-text" data-testid="error-package-type">{errors.package_type}</p>
                   )}
-                </div>
-
-                <div>
-                  <label className="label" htmlFor="additionalNumbers">Optionale weitere Rufnummern</label>
-                  <Input
-                    id="additionalNumbers"
-                    data-testid="inquiry-additional-numbers-input"
-                    type="text"
-                    value={formData.additional_numbers}
-                    onChange={(e) => updateField("additional_numbers", e.target.value)}
-                    placeholder="Kommagetrennt eingeben"
-                    className="input-soft"
-                  />
                 </div>
 
                 <div>
@@ -420,7 +444,7 @@ function App() {
                   className="cta-dark submit-btn"
                   type="submit"
                 >
-                  {isSubmitting ? "Wird gesendet ..." : "Zahlungsaufforderung anfordern"}
+                  {isSubmitting ? "Wird gesendet ..." : "API-Einstellung und Anleitung anfordern"}
                 </Button>
               </form>
             ) : (
@@ -428,7 +452,7 @@ function App() {
                 <CircleCheck size={30} />
                 <h3>Vielen Dank! Ihre Anfrage ist eingegangen.</h3>
                 <p>
-                  Sie erhalten die Zahlungsaufforderung in Kürze per E-Mail. Nach Zahlungseingang folgt die Anleitung per E-Mail.
+                  Ihre Anfrage wurde mit {submittedCount} betroffenen Rufnummern gespeichert. Sie erhalten die Zahlungsaufforderung in Kürze per E-Mail. Nach Zahlungseingang folgt die Anleitung per E-Mail.
                 </p>
               </div>
             )}
