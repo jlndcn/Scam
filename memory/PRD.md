@@ -17,6 +17,7 @@ Erstellung einer professionellen, modernen Landingpage für das fiktive Produkt 
 - Dark-Premium Redesign umgesetzt und Bild mit Anzug entfernt.
 - QR-Code-Bereich vollständig entfernt (Hero, Texte/Bezüge, Ablaufbezeichnung angepasst).
 - Dark-Premium Optik weiter optimiert: stärkere Trust-Elemente im Hero, klarere CTA-Führung, verfeinerte Abstände/States.
+- Grundoptik auf **WhatsApp-artigen Dark-Style** umgestellt (kräftiges Grün, Business-Dark-Kontrast) und Layout bewusst kompakter/professioneller ausgerichtet.
 - API- und Regressionstests aktualisiert; aktuelle Tests bestanden.
 
 ## Priorisierter Backlog
