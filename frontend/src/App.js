@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import "@/App.css";
-import axios from "axios";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import {
   ArrowRight,
@@ -33,7 +32,10 @@ import {
 } from "@/components/ui/accordion";
 import { Toaster, toast } from "@/components/ui/sonner";
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const encodeFormData = (data) =>
+  Object.keys(data)
+    .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`)
+    .join("&");
 
 const packageOptions = [
   {
@@ -276,31 +278,29 @@ function App() {
     const businessNumbers = parseBusinessNumbers(formData.phone_numbers_text);
     setIsSubmitting(true);
     try {
-      const response = await axios.post(`${API}/inquiries`, {
-        email: formData.email,
-        business_account_name: formData.business_account_name,
-        phone_numbers: businessNumbers,
-        package_type: formData.package_type,
+      await fetch("/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: encodeFormData({
+          "form-name": "inquiry",
+          email: formData.email,
+          business_account_name: formData.business_account_name,
+          phone_numbers_text: formData.phone_numbers_text,
+          package_type: formData.package_type,
+        }),
       });
 
-      const emailDeliveryStatus = response?.data?.email_delivery_status;
       setSubmittedCount(businessNumbers.length);
-
-      if (emailDeliveryStatus === "sent") {
-        setSubmitFeedback(
-          "Vielen Dank. Ihre Anfrage wurde übermittelt. Wir prüfen Ihre Angaben und senden Ihnen anschließend per E-Mail die weiteren Informationen sowie die Zahlungsaufforderung."
-        );
-        toast.success("Anfrage übermittelt.");
-      } else {
-        setSubmitFeedback(
-          "Ihre Anfrage wurde gespeichert. Sollte es Rückfragen geben, melden wir uns per E-Mail bei Ihnen."
-        );
-        toast.success("Anfrage gespeichert.");
-      }
+      setSubmitFeedback(
+        "Vielen Dank. Ihre Anfrage wurde übermittelt. Wir prüfen Ihre Angaben und senden Ihnen anschließend per E-Mail die weiteren Informationen sowie die Zahlungsaufforderung."
+      );
+      toast.success("Anfrage übermittelt.");
 
       setIsSubmitted(true);
     } catch (error) {
-      const message = error?.response?.data?.detail || "Fehler beim Senden. Bitte erneut versuchen.";
+      const message = "Fehler beim Senden. Bitte erneut versuchen.";
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -513,11 +513,20 @@ function App() {
           <div className="container-main form-wrap compact-form" data-testid="inquiry-form-section">
             <h2 className="section-heading">API-Zugang anfragen</h2>
             {!isSubmitted ? (
-              <form className="form-grid" onSubmit={submitForm} data-testid="inquiry-form">
+              <form
+                className="form-grid"
+                name="inquiry"
+                method="POST"
+                data-netlify="true"
+                onSubmit={submitForm}
+                data-testid="inquiry-form"
+              >
+                <input type="hidden" name="form-name" value="inquiry" data-testid="inquiry-form-name-hidden" />
                 <div>
                   <label className="label" htmlFor="email">E-Mail-Adresse</label>
                   <Input
                     id="email"
+                    name="email"
                     data-testid="inquiry-email-input"
                     type="email"
                     value={formData.email}
@@ -532,6 +541,7 @@ function App() {
                   <label className="label" htmlFor="businessAccountName">WhatsApp Business Account Name</label>
                   <Input
                     id="businessAccountName"
+                    name="business_account_name"
                     data-testid="inquiry-business-account-name-input"
                     type="text"
                     value={formData.business_account_name}
@@ -548,6 +558,7 @@ function App() {
                   <label className="label" htmlFor="businessNumbers">Rufnummer oder Rufnummern</label>
                   <Textarea
                     id="businessNumbers"
+                    name="phone_numbers_text"
                     data-testid="inquiry-phone-numbers-input"
                     value={formData.phone_numbers_text}
                     onChange={(e) => updateField("phone_numbers_text", e.target.value)}
@@ -564,6 +575,12 @@ function App() {
 
                 <div>
                   <label className="label">Paket auswählen</label>
+                  <input
+                    type="hidden"
+                    name="package_type"
+                    value={formData.package_type}
+                    data-testid="inquiry-package-hidden-input"
+                  />
                   <Select
                     value={formData.package_type}
                     onValueChange={(value) => updateField("package_type", value)}

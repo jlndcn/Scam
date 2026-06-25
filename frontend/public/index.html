@@ -27,6 +27,13 @@
     </head>
     <body>
         <noscript>You need to enable JavaScript to run this app.</noscript>
+        <form name="inquiry" method="POST" data-netlify="true" hidden>
+            <input type="hidden" name="form-name" value="inquiry" />
+            <input type="email" name="email" />
+            <input type="text" name="business_account_name" />
+            <textarea name="phone_numbers_text"></textarea>
+            <input type="text" name="package_type" />
+        </form>
         <div id="root"></div>
         <!--
       This HTML file is a template.
