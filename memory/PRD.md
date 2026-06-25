@@ -19,6 +19,7 @@ Die bestehende Landingpage soll vollständig modernisiert und erweitert werden: 
 - Formular auf 4 Kernfelder reduziert (E-Mail, WhatsApp Business Account Name, Rufnummer(n), Paket) und API-Contract entsprechend vereinfacht.
 - Hero-Kicker/Abstands-System überarbeitet, Timeline auf 01–05 geändert, Ablauf visuell aufgewertet und Mobile-Readability stark optimiert.
 - Mobile Conversion-Boost ergänzt: sticky Bottom-CTA mit 2 Buttons (API-Zugang anfragen / Pakete ansehen), beim Runterscrollen ausblendend und beim Hochscrollen wieder sichtbar.
+- Mobile Sticky-CTA zusätzlich als A/B-Test (50/50, localStorage-persistiert) vorbereitet: Variante B nutzt conversion-stärkere Texte („Kostenlose Erstprüfung starten“ / „Passendes Paket finden“).
 
 ## Priorisierter Backlog
 ### P0

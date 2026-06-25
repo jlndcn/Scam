@@ -138,9 +138,22 @@ function App() {
   const [submitFeedback, setSubmitFeedback] = useState("");
   const [submittedCount, setSubmittedCount] = useState(0);
   const [showMobileCta, setShowMobileCta] = useState(true);
+  const [stickyCtaVariant, setStickyCtaVariant] = useState("A");
   const shouldReduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll();
   const heroParallax = useTransform(scrollYProgress, [0, 0.35], [0, shouldReduceMotion ? 0 : -25]);
+
+  useEffect(() => {
+    const savedVariant = localStorage.getItem("sticky_cta_variant");
+    if (savedVariant === "A" || savedVariant === "B") {
+      setStickyCtaVariant(savedVariant);
+      return;
+    }
+
+    const randomVariant = Math.random() < 0.5 ? "A" : "B";
+    localStorage.setItem("sticky_cta_variant", randomVariant);
+    setStickyCtaVariant(randomVariant);
+  }, []);
 
   useEffect(() => {
     let lastY = window.scrollY;
@@ -189,6 +202,19 @@ function App() {
     if (formData.package_type === "lifetime") return "Lifetime Zugang";
     return "Paket auswählen";
   }, [formData.package_type]);
+
+  const stickyCtaText = useMemo(() => {
+    if (stickyCtaVariant === "B") {
+      return {
+        primary: "Kostenlose Erstprüfung starten",
+        secondary: "Passendes Paket finden",
+      };
+    }
+    return {
+      primary: "API-Zugang anfragen",
+      secondary: "Pakete ansehen",
+    };
+  }, [stickyCtaVariant]);
 
   const updateField = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -629,6 +655,7 @@ function App() {
       <div
         className={`mobile-sticky-cta ${showMobileCta ? "visible" : "hidden"}`}
         data-testid="mobile-sticky-cta-bar"
+        data-variant={stickyCtaVariant}
       >
         <button
           type="button"
@@ -636,7 +663,7 @@ function App() {
           data-testid="mobile-sticky-primary-cta"
           onClick={() => jumpToForm()}
         >
-          API-Zugang anfragen
+          {stickyCtaText.primary}
         </button>
         <button
           type="button"
@@ -644,7 +671,7 @@ function App() {
           data-testid="mobile-sticky-secondary-cta"
           onClick={() => scrollToSection("pakete")}
         >
-          Pakete ansehen
+          {stickyCtaText.secondary}
         </button>
       </div>
 
