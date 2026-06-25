@@ -3,12 +3,12 @@ import "@/App.css";
 import axios from "axios";
 import { motion } from "framer-motion";
 import {
-  QrCode,
   ShieldCheck,
   AlertTriangle,
   CircleCheck,
   ServerCog,
   MessageSquareWarning,
+  BadgeCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,7 +53,7 @@ const packageOptions = [
 ];
 
 const processSteps = [
-  "QR-Code scannen oder Button klicken",
+  "Button klicken und Anfrage starten",
   "E-Mail-Adresse und betroffene Rufnummern eintragen",
   "Paket auswählen",
   "Zahlungsaufforderung per E-Mail erhalten",
@@ -244,7 +244,7 @@ function App() {
                   className="cta-light"
                   onClick={() => jumpToForm()}
                 >
-                  QR-Code Bereich öffnen
+                  Pakete ansehen
                 </Button>
               </div>
             </div>
@@ -257,10 +257,17 @@ function App() {
                   Für Teams mit hohem Nachrichtenvolumen und klaren Versandprozessen.
                 </p>
               </div>
-              <div className="qr-card" data-testid="qr-placeholder-card">
-                <QrCode size={72} />
-                <p data-testid="qr-placeholder-text">QR-Code Platzhalter</p>
-                <span data-testid="qr-placeholder-subtext">Scan öffnet direkt das Anfrageformular</span>
+
+              <div className="trust-card" data-testid="hero-trust-card">
+                <div className="trust-row" data-testid="trust-point-1">
+                  <BadgeCheck size={18} /> Nur für WhatsApp Business
+                </div>
+                <div className="trust-row" data-testid="trust-point-2">
+                  <BadgeCheck size={18} /> Paketbasierte Rufnummernlogik
+                </div>
+                <div className="trust-row" data-testid="trust-point-3">
+                  <BadgeCheck size={18} /> Klare Garantiebedingungen
+                </div>
               </div>
             </div>
           </div>

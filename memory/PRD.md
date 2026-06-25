@@ -15,6 +15,8 @@ Erstellung einer professionellen, modernen Landingpage für das fiktive Produkt 
 - Neue Mehrfach-Rufnummernlogik: **Monatlich max. 5**, **Lifetime max. 3** (Frontend + Backend abgesichert).
 - Titel geändert auf: **„API-Einstellung und Anleitung anfordern“**.
 - Dark-Premium Redesign umgesetzt und Bild mit Anzug entfernt.
+- QR-Code-Bereich vollständig entfernt (Hero, Texte/Bezüge, Ablaufbezeichnung angepasst).
+- Dark-Premium Optik weiter optimiert: stärkere Trust-Elemente im Hero, klarere CTA-Führung, verfeinerte Abstände/States.
 - API- und Regressionstests aktualisiert; aktuelle Tests bestanden.
 
 ## Priorisierter Backlog
