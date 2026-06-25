@@ -42,17 +42,10 @@ class StatusCheckCreate(BaseModel):
 
 
 class InquiryRequestCreate(BaseModel):
-    name_company: str = Field(min_length=2, max_length=140)
     email: EmailStr
     business_account_name: str = Field(min_length=2, max_length=140)
     phone_numbers: List[str] = Field(min_length=1)
     package_type: Literal["monthly", "lifetime"]
-    estimated_volume: str = Field(min_length=1, max_length=80)
-    project_message: str = Field(min_length=5, max_length=3000)
-    confirm_business_account_exists: bool
-    confirm_privacy_visibility_settings: bool
-    confirm_payment_delivery_process_understood: bool
-    confirm_no_independent_changes: bool
 
     @model_validator(mode="after")
     def validate_form_data(self):
@@ -79,17 +72,10 @@ class InquiryRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    name_company: str
     email: EmailStr
     business_account_name: str
     phone_numbers: List[str]
     package_type: Literal["monthly", "lifetime"]
-    estimated_volume: str
-    project_message: str
-    confirm_business_account_exists: bool
-    confirm_privacy_visibility_settings: bool
-    confirm_payment_delivery_process_understood: bool
-    confirm_no_independent_changes: bool
     processing_status: Literal["new_request"] = "new_request"
     email_delivery_status: Literal["sent", "pending"] = "pending"
     status: Literal["payment_request_pending"] = "payment_request_pending"
@@ -120,18 +106,11 @@ def send_inquiry_email(inquiry: InquiryRequest) -> bool:
     email_body = (
         "Neue Anfrage über Landingpage\n\n"
         f"Zeitpunkt: {timestamp}\n"
-        f"Name / Firma: {inquiry.name_company}\n"
         f"E-Mail-Adresse: {inquiry.email}\n"
         f"WhatsApp Business Account Name: {inquiry.business_account_name}\n"
         f"Rufnummer(n): {', '.join(inquiry.phone_numbers)}\n"
         f"Gewünschtes Paket: {inquiry.package_type}\n"
-        f"Geschätztes Nachrichtenvolumen: {inquiry.estimated_volume}\n"
-        f"Nachricht / Projektbeschreibung: {inquiry.project_message}\n\n"
-        "Bestätigungen:\n"
-        f"- Business Account vorhanden: {checkbox_yes if inquiry.confirm_business_account_exists else 'Nein'}\n"
-        f"- Datenschutz-/Sichtbarkeitseinstellungen sichtbar: {checkbox_yes if inquiry.confirm_privacy_visibility_settings else 'Nein'}\n"
-        f"- PDF/API-Schlüssel/Beschreibung verstanden: {checkbox_yes if inquiry.confirm_payment_delivery_process_understood else 'Nein'}\n"
-        f"- Keine eigenständigen Änderungen nach Einrichtung: {checkbox_yes if inquiry.confirm_no_independent_changes else 'Nein'}\n"
+        f"Status: {checkbox_yes}\n"
     )
 
     message = EmailMessage()
@@ -193,18 +172,6 @@ async def get_status_checks():
 
 @api_router.post("/inquiries", response_model=InquiryRequest)
 async def create_inquiry_request(input_data: InquiryRequestCreate):
-    confirmations = [
-        input_data.confirm_business_account_exists,
-        input_data.confirm_privacy_visibility_settings,
-        input_data.confirm_payment_delivery_process_understood,
-        input_data.confirm_no_independent_changes,
-    ]
-    if not all(confirmations):
-        raise HTTPException(
-            status_code=400,
-            detail="Alle erforderlichen Bestätigungen müssen akzeptiert werden."
-        )
-
     inquiry_obj = InquiryRequest(**input_data.model_dump())
 
     db_doc = inquiry_obj.model_dump()
@@ -251,12 +218,7 @@ async def list_inquiry_requests():
 
         inquiry.setdefault("name_company", "Nicht angegeben")
         inquiry.setdefault("business_account_name", "Nicht angegeben")
-        inquiry.setdefault("estimated_volume", "Nicht angegeben")
-        inquiry.setdefault("project_message", "Nicht angegeben")
-        inquiry.setdefault("confirm_business_account_exists", False)
-        inquiry.setdefault("confirm_privacy_visibility_settings", False)
-        inquiry.setdefault("confirm_payment_delivery_process_understood", False)
-        inquiry.setdefault("confirm_no_independent_changes", False)
+        inquiry.setdefault("phone_numbers", [])
         inquiry.setdefault("processing_status", "new_request")
         inquiry.setdefault("email_delivery_status", "pending")
 
@@ -267,6 +229,13 @@ async def list_inquiry_requests():
         inquiry.pop("additional_numbers", None)
         inquiry.pop("business_numbers", None)
         inquiry.pop("accept_guarantee_terms", None)
+        inquiry.pop("estimated_volume", None)
+        inquiry.pop("project_message", None)
+        inquiry.pop("confirm_business_account_exists", None)
+        inquiry.pop("confirm_privacy_visibility_settings", None)
+        inquiry.pop("confirm_payment_delivery_process_understood", None)
+        inquiry.pop("confirm_no_independent_changes", None)
+        inquiry.pop("name_company", None)
         normalized_items.append(InquiryRequest(**inquiry))
 
     normalized_items.sort(key=lambda item: item.created_at, reverse=True)

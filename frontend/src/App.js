@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -78,11 +77,11 @@ const packageOptions = [
 ];
 
 const processSteps = [
-  { no: "09", text: "Formular ausfüllen" },
-  { no: "10", text: "Angaben und Rufnummern prüfen" },
-  { no: "11", text: "Zahlung bearbeiten" },
-  { no: "12", text: "PDF-Anleitung und API-Schlüssel per E-Mail erhalten" },
-  { no: "13", text: "API-Schlüssel gemäß Anleitung einpflegen" },
+  { no: "01", text: "Formular ausfüllen" },
+  { no: "02", text: "Angaben und Rufnummern prüfen" },
+  { no: "03", text: "Zahlung bearbeiten" },
+  { no: "04", text: "PDF-Anleitung und API-Schlüssel per E-Mail erhalten" },
+  { no: "05", text: "API-Schlüssel gemäß Anleitung einpflegen" },
 ];
 
 const faqItems = [
@@ -118,17 +117,10 @@ const faqItems = [
 ];
 
 const initialForm = {
-  name_company: "",
   email: "",
   business_account_name: "",
   phone_numbers_text: "",
   package_type: "",
-  estimated_volume: "",
-  project_message: "",
-  confirm_business_account_exists: false,
-  confirm_privacy_visibility_settings: false,
-  confirm_payment_delivery_process_understood: false,
-  confirm_no_independent_changes: false,
 };
 
 const sectionMotion = {
@@ -186,9 +178,6 @@ function App() {
     const nextErrors = {};
     const numbers = parseBusinessNumbers(formData.phone_numbers_text);
 
-    if (!formData.name_company.trim()) {
-      nextErrors.name_company = "Bitte Name oder Firma eingeben.";
-    }
     if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       nextErrors.email = "Bitte geben Sie eine gültige E-Mail-Adresse ein.";
     }
@@ -209,35 +198,6 @@ function App() {
         nextErrors.phone_numbers_text = "Jede Rufnummer muss zwischen 6 und 30 Zeichen lang sein.";
       }
     }
-    if (!formData.estimated_volume.trim()) {
-      nextErrors.estimated_volume = "Bitte das geschätzte Nachrichtenvolumen angeben.";
-    }
-    if (!formData.project_message.trim()) {
-      nextErrors.project_message = "Bitte eine kurze Nachricht oder Projektbeschreibung eingeben.";
-    }
-
-    const requiredCheckboxes = [
-      "confirm_business_account_exists",
-      "confirm_privacy_visibility_settings",
-      "confirm_payment_delivery_process_understood",
-      "confirm_no_independent_changes",
-    ];
-
-    requiredCheckboxes.forEach((key) => {
-      if (!formData[key]) {
-        nextErrors[key] = "Bitte diese Bestätigung aktivieren.";
-      }
-    });
-
-    if (
-      !formData.confirm_business_account_exists ||
-      !formData.confirm_privacy_visibility_settings ||
-      !formData.confirm_payment_delivery_process_understood ||
-      !formData.confirm_no_independent_changes
-    ) {
-      nextErrors.confirmations = "Bitte alle Pflichtbestätigungen aktivieren.";
-    }
-
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -253,18 +213,10 @@ function App() {
     setIsSubmitting(true);
     try {
       const response = await axios.post(`${API}/inquiries`, {
-        name_company: formData.name_company,
         email: formData.email,
         business_account_name: formData.business_account_name,
         phone_numbers: businessNumbers,
         package_type: formData.package_type,
-        estimated_volume: formData.estimated_volume,
-        project_message: formData.project_message,
-        confirm_business_account_exists: formData.confirm_business_account_exists,
-        confirm_privacy_visibility_settings: formData.confirm_privacy_visibility_settings,
-        confirm_payment_delivery_process_understood:
-          formData.confirm_payment_delivery_process_understood,
-        confirm_no_independent_changes: formData.confirm_no_independent_changes,
       });
 
       const emailDeliveryStatus = response?.data?.email_delivery_status;
@@ -330,7 +282,7 @@ function App() {
         <motion.section className="section hero-section" {...sectionMotion}>
           <div className="container-main hero-grid">
             <div>
-              <p className="overline" data-testid="hero-overline">Technische Umsetzung für Unternehmen</p>
+              <p className="hero-kicker" data-testid="hero-overline">Sperr-Risiken reduzieren – WhatsApp Business stabil und professionell nutzen.</p>
               <h1 className="hero-title" data-testid="hero-title">
                 WhatsApp Business stabil nutzen – auch bei hohem Nachrichtenvolumen
               </h1>
@@ -494,24 +446,10 @@ function App() {
         </motion.section>
 
         <motion.section className="section" id="anfrageformular" {...sectionMotion}>
-          <div className="container-main form-wrap" data-testid="inquiry-form-section">
+          <div className="container-main form-wrap compact-form" data-testid="inquiry-form-section">
             <h2 className="section-heading">API-Zugang anfragen</h2>
             {!isSubmitted ? (
               <form className="form-grid" onSubmit={submitForm} data-testid="inquiry-form">
-                <div>
-                  <label className="label" htmlFor="nameCompany">Name / Firma</label>
-                  <Input
-                    id="nameCompany"
-                    data-testid="inquiry-name-company-input"
-                    type="text"
-                    value={formData.name_company}
-                    onChange={(e) => updateField("name_company", e.target.value)}
-                    placeholder="z. B. Muster GmbH"
-                    className="input-soft"
-                  />
-                  {errors.name_company && <p className="error-text" data-testid="error-name-company">{errors.name_company}</p>}
-                </div>
-
                 <div>
                   <label className="label" htmlFor="email">E-Mail-Adresse</label>
                   <Input
@@ -583,97 +521,6 @@ function App() {
                   )}
                 </div>
 
-                <div>
-                  <label className="label" htmlFor="estimatedVolume">Geschätztes Nachrichtenvolumen</label>
-                  <Input
-                    id="estimatedVolume"
-                    data-testid="inquiry-estimated-volume-input"
-                    type="text"
-                    value={formData.estimated_volume}
-                    onChange={(e) => updateField("estimated_volume", e.target.value)}
-                    placeholder="z. B. 5.000 Nachrichten / Tag"
-                    className="input-soft"
-                  />
-                  {errors.estimated_volume && (
-                    <p className="error-text" data-testid="error-estimated-volume">{errors.estimated_volume}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="label" htmlFor="projectMessage">Nachricht / Projektbeschreibung</label>
-                  <Textarea
-                    id="projectMessage"
-                    data-testid="inquiry-project-message-input"
-                    value={formData.project_message}
-                    onChange={(e) => updateField("project_message", e.target.value)}
-                    placeholder="Kurz beschreiben, was eingebunden werden soll"
-                    className="input-soft textarea-soft"
-                  />
-                  {errors.project_message && (
-                    <p className="error-text" data-testid="error-project-message">{errors.project_message}</p>
-                  )}
-                </div>
-
-                <div className="terms-row" data-testid="inquiry-terms-row">
-                  <Checkbox
-                    id="confirmBusinessAccount"
-                    data-testid="confirm-business-account-checkbox"
-                    checked={formData.confirm_business_account_exists}
-                    onCheckedChange={(checked) =>
-                      updateField("confirm_business_account_exists", Boolean(checked))
-                    }
-                  />
-                  <label htmlFor="confirmBusinessAccount" className="terms-label">
-                    Ich bestätige, dass bereits ein WhatsApp Business Account mit der angegebenen Rufnummer besteht.
-                  </label>
-                </div>
-
-                <div className="terms-row" data-testid="privacy-settings-row">
-                  <Checkbox
-                    id="confirmPrivacySettings"
-                    data-testid="confirm-privacy-settings-checkbox"
-                    checked={formData.confirm_privacy_visibility_settings}
-                    onCheckedChange={(checked) =>
-                      updateField("confirm_privacy_visibility_settings", Boolean(checked))
-                    }
-                  />
-                  <label htmlFor="confirmPrivacySettings" className="terms-label">
-                    Ich bestätige, dass die relevanten Datenschutz- und Sichtbarkeitseinstellungen des WhatsApp Business Accounts für die Einrichtung auf sichtbar gestellt werden.
-                  </label>
-                </div>
-
-                <div className="terms-row" data-testid="payment-process-row">
-                  <Checkbox
-                    id="confirmPaymentProcess"
-                    data-testid="confirm-payment-process-checkbox"
-                    checked={formData.confirm_payment_delivery_process_understood}
-                    onCheckedChange={(checked) =>
-                      updateField("confirm_payment_delivery_process_understood", Boolean(checked))
-                    }
-                  />
-                  <label htmlFor="confirmPaymentProcess" className="terms-label">
-                    Ich habe verstanden, dass ich nach Bearbeitung der Zahlung per E-Mail eine PDF-Anleitung, einen API-Schlüssel und eine Beschreibung zur Einpflege erhalte.
-                  </label>
-                </div>
-
-                <div className="terms-row" data-testid="no-changes-row">
-                  <Checkbox
-                    id="confirmNoChanges"
-                    data-testid="confirm-no-changes-checkbox"
-                    checked={formData.confirm_no_independent_changes}
-                    onCheckedChange={(checked) =>
-                      updateField("confirm_no_independent_changes", Boolean(checked))
-                    }
-                  />
-                  <label htmlFor="confirmNoChanges" className="terms-label">
-                    Ich nehme zur Kenntnis, dass eigenständige Änderungen an den Einstellungen nach der Einrichtung zu Ausfällen oder Störungen führen können.
-                  </label>
-                </div>
-
-                {errors.confirmations && (
-                  <p className="error-text" data-testid="error-confirmations">{errors.confirmations}</p>
-                )}
-
                 <Button
                   data-testid="inquiry-submit-button"
                   disabled={isSubmitting}
@@ -684,7 +531,7 @@ function App() {
                 </Button>
 
                 <p className="form-hint" data-testid="form-submission-hint">
-                  Nach Absenden des Formulars werden die Angaben geprüft. Nach erfolgreicher Zahlungsbearbeitung erhalten Sie per E-Mail die PDF-Anleitung, den API-Schlüssel und die Beschreibung zur Einrichtung. Bitte nehmen Sie während der Einrichtung keine eigenständigen Änderungen an den WhatsApp-Business-Einstellungen vor.
+                  Nach dem Absenden prüfen wir Ihre Angaben und senden Ihnen anschließend die weiteren Informationen sowie die Zahlungsaufforderung per E-Mail.
                 </p>
               </form>
             ) : (
