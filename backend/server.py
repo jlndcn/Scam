@@ -10,6 +10,8 @@ from pydantic import EmailStr
 from typing import List, Literal, Optional
 import uuid
 from datetime import datetime, timezone
+import smtplib
+from email.message import EmailMessage
 
 
 ROOT_DIR = Path(__file__).parent
@@ -40,15 +42,21 @@ class StatusCheckCreate(BaseModel):
 
 
 class InquiryRequestCreate(BaseModel):
+    name_company: str = Field(min_length=2, max_length=140)
     email: EmailStr
-    business_numbers: List[str] = Field(min_length=1)
+    business_account_name: str = Field(min_length=2, max_length=140)
+    phone_numbers: List[str] = Field(min_length=1)
     package_type: Literal["monthly", "lifetime"]
-    name_company: Optional[str] = None
-    accept_guarantee_terms: bool
+    estimated_volume: str = Field(min_length=1, max_length=80)
+    project_message: str = Field(min_length=5, max_length=3000)
+    confirm_business_account_exists: bool
+    confirm_privacy_visibility_settings: bool
+    confirm_payment_delivery_process_understood: bool
+    confirm_no_independent_changes: bool
 
     @model_validator(mode="after")
-    def validate_business_numbers(self):
-        cleaned_numbers = [number.strip() for number in self.business_numbers if number and number.strip()]
+    def validate_form_data(self):
+        cleaned_numbers = [number.strip() for number in self.phone_numbers if number and number.strip()]
 
         if not cleaned_numbers:
             raise ValueError("Mindestens eine betroffene Rufnummer ist erforderlich.")
@@ -63,7 +71,7 @@ class InquiryRequestCreate(BaseModel):
             if len(number) < 6 or len(number) > 30:
                 raise ValueError("Jede Rufnummer muss zwischen 6 und 30 Zeichen lang sein.")
 
-        self.business_numbers = cleaned_numbers
+        self.phone_numbers = cleaned_numbers
         return self
 
 
@@ -71,13 +79,87 @@ class InquiryRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name_company: str
     email: EmailStr
-    business_numbers: List[str]
+    business_account_name: str
+    phone_numbers: List[str]
     package_type: Literal["monthly", "lifetime"]
-    name_company: Optional[str] = None
-    accept_guarantee_terms: bool
+    estimated_volume: str
+    project_message: str
+    confirm_business_account_exists: bool
+    confirm_privacy_visibility_settings: bool
+    confirm_payment_delivery_process_understood: bool
+    confirm_no_independent_changes: bool
+    processing_status: Literal["new_request"] = "new_request"
+    email_delivery_status: Literal["sent", "pending"] = "pending"
     status: Literal["payment_request_pending"] = "payment_request_pending"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+def send_inquiry_email(inquiry: InquiryRequest) -> bool:
+    smtp_host = os.environ.get("SMTP_HOST")
+    smtp_port = os.environ.get("SMTP_PORT")
+    smtp_user = os.environ.get("SMTP_USER")
+    smtp_password = os.environ.get("SMTP_PASSWORD")
+    smtp_from = os.environ.get("SMTP_FROM")
+    receiver = os.environ.get("INQUIRY_RECEIVER_EMAIL")
+
+    if not all([smtp_host, smtp_port, smtp_from, receiver]):
+        logger.warning("SMTP nicht vollständig konfiguriert: Anfrage wurde nur gespeichert.")
+        return False
+
+    try:
+        port = int(smtp_port)
+    except (TypeError, ValueError):
+        logger.exception("SMTP_PORT ist ungültig: %s", smtp_port)
+        return False
+
+    timestamp = inquiry.created_at.isoformat()
+    checkbox_yes = "Ja"
+
+    email_body = (
+        "Neue Anfrage über Landingpage\n\n"
+        f"Zeitpunkt: {timestamp}\n"
+        f"Name / Firma: {inquiry.name_company}\n"
+        f"E-Mail-Adresse: {inquiry.email}\n"
+        f"WhatsApp Business Account Name: {inquiry.business_account_name}\n"
+        f"Rufnummer(n): {', '.join(inquiry.phone_numbers)}\n"
+        f"Gewünschtes Paket: {inquiry.package_type}\n"
+        f"Geschätztes Nachrichtenvolumen: {inquiry.estimated_volume}\n"
+        f"Nachricht / Projektbeschreibung: {inquiry.project_message}\n\n"
+        "Bestätigungen:\n"
+        f"- Business Account vorhanden: {checkbox_yes if inquiry.confirm_business_account_exists else 'Nein'}\n"
+        f"- Datenschutz-/Sichtbarkeitseinstellungen sichtbar: {checkbox_yes if inquiry.confirm_privacy_visibility_settings else 'Nein'}\n"
+        f"- PDF/API-Schlüssel/Beschreibung verstanden: {checkbox_yes if inquiry.confirm_payment_delivery_process_understood else 'Nein'}\n"
+        f"- Keine eigenständigen Änderungen nach Einrichtung: {checkbox_yes if inquiry.confirm_no_independent_changes else 'Nein'}\n"
+    )
+
+    message = EmailMessage()
+    message["Subject"] = "Neue Anfrage: WhatsApp Business / API-Service"
+    message["From"] = smtp_from
+    message["To"] = receiver
+    message.set_content(email_body)
+
+    try:
+        if port == 465:
+            with smtplib.SMTP_SSL(smtp_host, port, timeout=20) as server:
+                if smtp_user and smtp_password:
+                    server.login(smtp_user, smtp_password)
+                server.send_message(message)
+        else:
+            with smtplib.SMTP(smtp_host, port, timeout=20) as server:
+                server.ehlo()
+                if port in (587, 25):
+                    server.starttls()
+                    server.ehlo()
+                if smtp_user and smtp_password:
+                    server.login(smtp_user, smtp_password)
+                server.send_message(message)
+
+        return True
+    except Exception:
+        logger.exception("E-Mail-Versand fehlgeschlagen. Anfrage bleibt gespeichert.")
+        return False
 
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
@@ -111,19 +193,40 @@ async def get_status_checks():
 
 @api_router.post("/inquiries", response_model=InquiryRequest)
 async def create_inquiry_request(input_data: InquiryRequestCreate):
-    if not input_data.accept_guarantee_terms:
+    confirmations = [
+        input_data.confirm_business_account_exists,
+        input_data.confirm_privacy_visibility_settings,
+        input_data.confirm_payment_delivery_process_understood,
+        input_data.confirm_no_independent_changes,
+    ]
+    if not all(confirmations):
         raise HTTPException(
             status_code=400,
-            detail="Die Garantiebedingungen müssen akzeptiert werden."
+            detail="Alle erforderlichen Bestätigungen müssen akzeptiert werden."
         )
 
     inquiry_obj = InquiryRequest(**input_data.model_dump())
 
     db_doc = inquiry_obj.model_dump()
     db_doc["created_at"] = db_doc["created_at"].isoformat()
+    db_doc["email_delivery_status"] = "pending"
 
     await db.inquiry_requests.insert_one(db_doc)
-    return inquiry_obj
+
+    email_sent = send_inquiry_email(inquiry_obj)
+    email_status = "sent" if email_sent else "pending"
+
+    await db.inquiry_requests.update_one(
+        {"id": inquiry_obj.id},
+        {"$set": {"email_delivery_status": email_status}}
+    )
+
+    return InquiryRequest(
+        **{
+            **inquiry_obj.model_dump(),
+            "email_delivery_status": email_status,
+        }
+    )
 
 
 @api_router.get("/inquiries", response_model=List[InquiryRequest])
@@ -132,7 +235,7 @@ async def list_inquiry_requests():
 
     normalized_items = []
     for inquiry in inquiries:
-        if "business_numbers" not in inquiry:
+        if "phone_numbers" not in inquiry:
             fallback_numbers = []
             primary = inquiry.get("business_phone")
             additional = inquiry.get("additional_numbers")
@@ -144,13 +247,26 @@ async def list_inquiry_requests():
                 split_additional = [num.strip() for num in additional.split(",") if num.strip()]
                 fallback_numbers.extend(split_additional)
 
-            inquiry["business_numbers"] = fallback_numbers
+            inquiry["phone_numbers"] = fallback_numbers
+
+        inquiry.setdefault("name_company", "Nicht angegeben")
+        inquiry.setdefault("business_account_name", "Nicht angegeben")
+        inquiry.setdefault("estimated_volume", "Nicht angegeben")
+        inquiry.setdefault("project_message", "Nicht angegeben")
+        inquiry.setdefault("confirm_business_account_exists", False)
+        inquiry.setdefault("confirm_privacy_visibility_settings", False)
+        inquiry.setdefault("confirm_payment_delivery_process_understood", False)
+        inquiry.setdefault("confirm_no_independent_changes", False)
+        inquiry.setdefault("processing_status", "new_request")
+        inquiry.setdefault("email_delivery_status", "pending")
 
         if isinstance(inquiry.get("created_at"), str):
             inquiry["created_at"] = datetime.fromisoformat(inquiry["created_at"])
 
         inquiry.pop("business_phone", None)
         inquiry.pop("additional_numbers", None)
+        inquiry.pop("business_numbers", None)
+        inquiry.pop("accept_guarantee_terms", None)
         normalized_items.append(InquiryRequest(**inquiry))
 
     normalized_items.sort(key=lambda item: item.created_at, reverse=True)
