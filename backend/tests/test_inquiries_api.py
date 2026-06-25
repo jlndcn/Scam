@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 import requests
@@ -32,12 +33,15 @@ def api_client():
 class TestInquiriesAPI:
     """Core /api/inquiries behavior: valid submit, list, and invalid payload handling."""
 
+    @staticmethod
+    def _email(prefix: str) -> str:
+        return f"{prefix}.{uuid4().hex[:8]}@example.com"
+
     def test_create_inquiry_success_and_data_values(self, api_client, api_base_url):
         payload = {
-            "email": "qa.test.inquiry@example.com",
-            "business_phone": "+491700001234",
+            "email": self._email("qa.test.inquiry"),
+            "business_numbers": ["+491700001234", "+491700001235"],
             "package_type": "monthly",
-            "additional_numbers": "+491700009876",
             "name_company": "TEST_QA GmbH",
             "accept_guarantee_terms": True,
         }
@@ -48,9 +52,8 @@ class TestInquiriesAPI:
         data = response.json()
         assert isinstance(data.get("id"), str)
         assert data["email"] == payload["email"]
-        assert data["business_phone"] == payload["business_phone"]
+        assert data["business_numbers"] == payload["business_numbers"]
         assert data["package_type"] == payload["package_type"]
-        assert data["additional_numbers"] == payload["additional_numbers"]
         assert data["name_company"] == payload["name_company"]
         assert data["accept_guarantee_terms"] is True
         assert data["status"] == "payment_request_pending"
@@ -58,10 +61,9 @@ class TestInquiriesAPI:
 
     def test_get_inquiries_contains_recently_created_item(self, api_client, api_base_url):
         seed_payload = {
-            "email": "qa.list.verify@example.com",
-            "business_phone": "+491700002222",
+            "email": self._email("qa.list.verify"),
+            "business_numbers": ["+491700002222"],
             "package_type": "lifetime",
-            "additional_numbers": "",
             "name_company": "TEST_List Check",
             "accept_guarantee_terms": True,
         }
@@ -80,13 +82,13 @@ class TestInquiriesAPI:
         assert matched is not None
         assert matched["email"] == seed_payload["email"]
         assert matched["package_type"] == seed_payload["package_type"]
+        assert matched["business_numbers"] == seed_payload["business_numbers"]
 
     def test_create_inquiry_rejects_false_terms(self, api_client, api_base_url):
         payload = {
-            "email": "qa.false.terms@example.com",
-            "business_phone": "+491700003333",
+            "email": self._email("qa.false.terms"),
+            "business_numbers": ["+491700003333"],
             "package_type": "monthly",
-            "additional_numbers": "",
             "name_company": "TEST_False Terms",
             "accept_guarantee_terms": False,
         }
@@ -101,9 +103,8 @@ class TestInquiriesAPI:
     def test_create_inquiry_rejects_invalid_email(self, api_client, api_base_url):
         payload = {
             "email": "invalid-email-format",
-            "business_phone": "+491700004444",
+            "business_numbers": ["+491700004444"],
             "package_type": "monthly",
-            "additional_numbers": "",
             "name_company": "TEST_Invalid Email",
             "accept_guarantee_terms": True,
         }
@@ -117,9 +118,8 @@ class TestInquiriesAPI:
 
     def test_create_inquiry_rejects_missing_package_type(self, api_client, api_base_url):
         payload = {
-            "email": "qa.no.package@example.com",
-            "business_phone": "+491700005555",
-            "additional_numbers": "",
+            "email": self._email("qa.no.package"),
+            "business_numbers": ["+491700005555"],
             "name_company": "TEST_No Package",
             "accept_guarantee_terms": True,
         }
