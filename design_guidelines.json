@@ -1,0 +1,167 @@
+{
+  "theme_and_archetype": {
+    "theme": "LIGHT",
+    "archetype": "Archetype 4 (Swiss & High-Contrast) mixed with Archetype 1 (Organic & Earthy)",
+    "reasoning": "This is a B2B SaaS landing page solving a critical business problem (WhatsApp stability). It needs high authority, clarity, and trust (Swiss & High-Contrast), while incorporating the requested 'clean blue/teal' brand style without becoming a generic tech template. We avoid using teal for the primary CTA to maintain a premium, high-contrast look."
+  },
+  "typography": {
+    "heading_font": "Cabinet Grotesk",
+    "body_font": "IBM Plex Sans",
+    "pairing_strategy": "The 'Swiss Brutalist' Tech Look. Cabinet Grotesk provides a modern, authoritative corporate feel for headings. IBM Plex Sans ensures maximum legibility for dense technical and legal text (guarantees, FAQs).",
+    "scales": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-slate-900 leading-[1.1]",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-slate-900",
+      "h3": "text-xl sm:text-2xl font-bold tracking-tight text-slate-800",
+      "body": "text-base leading-relaxed text-slate-600 font-medium",
+      "small": "text-sm tracking-wide uppercase text-slate-500 font-semibold"
+    }
+  },
+  "color_palette": {
+    "background": "#FFFFFF",
+    "foreground": "#0F172A",
+    "brand_teal": "#0D9488",
+    "brand_teal_light": "#F0FDFA",
+    "brand_blue": "#0369A1",
+    "surface": "#F8FAFC",
+    "border": "#E2E8F0",
+    "muted": "#F1F5F9",
+    "muted_foreground": "#64748B",
+    "cta_background": "#0F172A",
+    "cta_text": "#FFFFFF",
+    "cta_hover": "#334155",
+    "warning_bg": "#FFFBEB",
+    "warning_text": "#B45309"
+  },
+  "layout_and_spacing": {
+    "spacing_scale": "Generous spacing. Use py-24 or py-32 for major sections. Internal card padding must be p-8 or p-10.",
+    "grid_strategy": "Asymmetric Bento Grid for features/process. Strict standard 2-column or 3-column grid for pricing and FAQs.",
+    "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "alignment": "Left-align dense text (Problem, Solution, Guarantee). Center-align Hero if suitable, but left-aligned Hero with right-side image/QR is preferred for B2B."
+  },
+  "surfaces_and_micro_themes": {
+    "header": "Crystal Glassmorphism: bg-white/80 backdrop-blur-xl border-b border-slate-200/50. Must have z-50 and stick to top.",
+    "cards": "Tactile Neumorphism: bg-white border border-slate-200 rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)].",
+    "highlight_card": "Tracing Beam / Highlight look: Add a 2px border of brand_teal (#0D9488) and a subtle brand_teal_light background. Include a small 'Beliebt' or 'Empfohlen' badge.",
+    "footer": "High-Contrast Dark: bg-slate-950 text-slate-400 py-20. Links hover to white."
+  },
+  "components": {
+    "button": "Shadcn Button heavily customized: rounded-full font-bold tracking-wide. Primary CTAs must be dark Slate-900 (not teal). Secondary buttons can be teal-tinted (bg-teal-50 text-teal-700).",
+    "form": "Shadcn Form components. Inputs should have bg-slate-50, border-slate-200, focus:border-teal-500, focus:ring-2 focus:ring-teal-500/20.",
+    "accordion": "Shadcn Accordion for FAQs. Keep it clean with border-b only, no enclosing boxes.",
+    "badges": "Use rounded-full px-3 py-1 text-sm font-semibold for overlines and tags."
+  },
+  "animation_and_motion": {
+    "hover_states": "All buttons elevate slightly (-translate-y-0.5) and increase shadow.",
+    "entrance": "Use framer-motion for simple fade-up (y: 20, opacity: 0 to 1) on scroll for major sections."
+  },
+  "media": {
+    "image_urls": [
+      {
+        "url": "https://images.pexels.com/photos/374618/pexels-photo-374618.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "category": "Hero Section",
+        "description": "Professional man using smartphone against a brick wall. Represents the serious B2B target audience relying heavily on mobile communication."
+      },
+      {
+        "url": "https://images.pexels.com/photos/12843342/pexels-photo-12843342.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "category": "Solution/Tech Section Background",
+        "description": "Abstract blue geometric pattern. Use as a subtle, low-opacity background (or mask) for the technical solution section."
+      },
+      {
+        "url": "https://images.pexels.com/photos/8867405/pexels-photo-8867405.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "category": "Guarantee / Trust Section",
+        "description": "Professional customer support team with headsets. Reinforces trust, scale, and the 'Dienstleistung' (service) aspect of the product."
+      }
+    ]
+  },
+  "content_structure": {
+    "hero": {
+      "headline": "WhatsApp Business stabil nutzen – auch bei hohem Nachrichtenvolumen",
+      "subheadline": "Eine neue technische Umsetzung für Unternehmen, Dienstleister und Teams, die WhatsApp Business intensiv nutzen.",
+      "cta": "Lösung anfordern"
+    },
+    "hint_section": {
+      "text": "Diese Lösung ist ausschließlich für WhatsApp Business gedacht. Nicht für private Accounts geeignet."
+    },
+    "problem_section": {
+      "title": "Das Risiko hoher Nachrichtenvolumen",
+      "text": "Unternehmen riskieren bei hohem Nachrichtenaufkommen Einschränkungen, automatische Spam-Einstufungen oder im schlimmsten Fall komplette Sperrungen ihres WhatsApp Business Accounts."
+    },
+    "solution_section": {
+      "title": "Die technische Umsetzung",
+      "text": "Unsere Lösung arbeitet mit strukturierter Nachrichtenlogik, kontrollierten Abläufen und einem definierten Versandrahmen, um Ihren Account zu schützen."
+    },
+    "guarantee_section": {
+      "title": "10.000 Nachrichten Garantie",
+      "text": "Die Stabilitäts-Garantie gilt fiktiv bis zu 10.000 ausgehenden Nachrichten pro Tag. Innerhalb dieses Limits schützt die technische Umsetzung bei korrekter Anwendung davor, dass WhatsApp Business allein wegen hoher Versandmenge oder automatischer Spam-Einstufung gesperrt wird."
+    },
+    "packages": [
+      {
+        "id": "monthly",
+        "name": "Monatliches Paket",
+        "price": "149,99 €",
+        "period": "pro Monat",
+        "features": [
+          "bis zu 5 WhatsApp-Business-Rufnummern",
+          "10.000 Nachrichten/Tag Garantie",
+          "Strukturierte Nachrichtenlogik"
+        ],
+        "button_text": "Monatliches Paket anfordern",
+        "highlighted": false
+      },
+      {
+        "id": "lifetime",
+        "name": "Lifetime-Angebot",
+        "price": "699 €",
+        "period": "einmalig",
+        "features": [
+          "bis zu 3 WhatsApp-Business-Rufnummern",
+          "10.000 Nachrichten/Tag Garantie",
+          "Strukturierte Nachrichtenlogik",
+          "Keine wiederkehrenden Kosten"
+        ],
+        "button_text": "Lifetime-Angebot anfordern",
+        "highlighted": true
+      }
+    ],
+    "form_section": {
+      "title": "Zugang anfordern",
+      "fields": {
+        "email": "E-Mail-Adresse",
+        "phone": "Betroffene WhatsApp-Business-Rufnummer",
+        "package": "Paket auswählen (Monatlich / Lifetime)",
+        "extra_phones": "Optionale weitere Rufnummern",
+        "name_company": "Optional Name / Firma",
+        "terms": "Ich akzeptiere die Garantiebedingungen"
+      },
+      "submit_button": "Zahlungsaufforderung anfordern",
+      "behavior": "Implement standard form validation. On submit, mock a backend request and display a success message component stating that the payment request has been sent to the provided email."
+    },
+    "process_steps": [
+      { "step": 1, "title": "Starten", "desc": "QR-Code scannen oder Button klicken" },
+      { "step": 2, "title": "Daten eingeben", "desc": "E-Mail-Adresse und betroffene Rufnummer eintragen" },
+      { "step": 3, "title": "Paket wählen", "desc": "Entscheiden Sie sich für Monatlich oder Lifetime" },
+      { "step": 4, "title": "Zahlung", "desc": "Zahlungsaufforderung per E-Mail erhalten" },
+      { "step": 5, "title": "Anleitung", "desc": "Nach Zahlungseingang Anleitung per E-Mail bekommen" }
+    ],
+    "faq": [
+      { "q": "Funktioniert das mit normalem WhatsApp?", "a": "Nein, diese Lösung ist ausschließlich für WhatsApp Business gedacht." },
+      { "q": "Warum muss ich die Rufnummer angeben?", "a": "Um die technische Umsetzung und Garantie explizit für Ihren Account zu lizenzieren." },
+      { "q": "Bis zu welchem Nachrichtenvolumen gilt die Garantie?", "a": "Die Garantie gilt fiktiv bis zu 10.000 ausgehenden Nachrichten pro Tag." },
+      { "q": "Was genau wird garantiert?", "a": "Dass Ihr Account innerhalb des Limits bei korrekter Anwendung nicht allein wegen der Nachrichtenmenge gesperrt wird." },
+      { "q": "Welche Pakete gibt es?", "a": "Ein Monatspaket für 149,99 € und ein Lifetime-Angebot für 699 €." },
+      { "q": "Wie bekomme ich Zugang?", "a": "Formular ausfüllen, Zahlungsaufforderung erhalten, nach Zahlung folgt die Anleitung per E-Mail." },
+      { "q": "Ist das offiziell von WhatsApp oder Meta?", "a": "Nein, es ist eine unabhängige technische Umsetzung." }
+    ],
+    "footer_links": ["Impressum", "Datenschutz", "AGB", "Garantiebedingungen", "Kontakt"]
+  },
+  "instructions_to_main_agent": [
+    "Load Cabinet Grotesk and IBM Plex Sans fonts.",
+    "Use pure HTML/Tailwind for main layout structures (Hero, Bento Grids) to maintain absolute control over the generous spacing and asymmetry.",
+    "Use Shadcn UI components for interactive elements (Buttons, Inputs, Select for Packages, Checkbox, Accordion for FAQ).",
+    "Ensure 'data-testid' attributes are added to all form inputs, buttons, and accordion triggers.",
+    "The 'Hinweisbereich' (Hint section) MUST stand out. Use a soft warning background (e.g., bg-amber-50) or a prominent teal banner to make it explicitly clear this is ONLY for WhatsApp Business.",
+    "The Hero section should include a visual representation of a QR Code (use lucide-react 'QrCode' icon scaled up inside a stylized card) as the user requested a QR placeholder behavior.",
+    "For the form, create a client-side mock submission that hides the form and shows a styled Success/Thank You state upon valid submission.",
+    "Do NOT use 'Inter' font anywhere. Stick strictly to the defined typography."
+  ]
+}
