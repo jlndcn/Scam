@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -6,7 +6,8 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from pydantic import EmailStr
+from typing import List, Literal, Optional
 import uuid
 from datetime import datetime, timezone
 
@@ -37,6 +38,29 @@ class StatusCheck(BaseModel):
 class StatusCheckCreate(BaseModel):
     client_name: str
 
+
+class InquiryRequestCreate(BaseModel):
+    email: EmailStr
+    business_phone: str = Field(min_length=6, max_length=30)
+    package_type: Literal["monthly", "lifetime"]
+    additional_numbers: Optional[str] = None
+    name_company: Optional[str] = None
+    accept_guarantee_terms: bool
+
+
+class InquiryRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    email: EmailStr
+    business_phone: str
+    package_type: Literal["monthly", "lifetime"]
+    additional_numbers: Optional[str] = None
+    name_company: Optional[str] = None
+    accept_guarantee_terms: bool
+    status: Literal["payment_request_pending"] = "payment_request_pending"
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
@@ -65,6 +89,37 @@ async def get_status_checks():
             check['timestamp'] = datetime.fromisoformat(check['timestamp'])
     
     return status_checks
+
+
+@api_router.post("/inquiries", response_model=InquiryRequest)
+async def create_inquiry_request(input_data: InquiryRequestCreate):
+    if not input_data.accept_guarantee_terms:
+        raise HTTPException(
+            status_code=400,
+            detail="Die Garantiebedingungen müssen akzeptiert werden."
+        )
+
+    inquiry_obj = InquiryRequest(**input_data.model_dump())
+
+    db_doc = inquiry_obj.model_dump()
+    db_doc["created_at"] = db_doc["created_at"].isoformat()
+
+    await db.inquiry_requests.insert_one(db_doc)
+    return inquiry_obj
+
+
+@api_router.get("/inquiries", response_model=List[InquiryRequest])
+async def list_inquiry_requests():
+    inquiries = await db.inquiry_requests.find({}, {"_id": 0}).to_list(1000)
+
+    normalized_items = []
+    for inquiry in inquiries:
+        if isinstance(inquiry.get("created_at"), str):
+            inquiry["created_at"] = datetime.fromisoformat(inquiry["created_at"])
+        normalized_items.append(InquiryRequest(**inquiry))
+
+    normalized_items.sort(key=lambda item: item.created_at, reverse=True)
+    return normalized_items
 
 # Include the router in the main app
 app.include_router(api_router)
